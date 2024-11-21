@@ -8,7 +8,7 @@ app.config['ENV'] = os.getenv('FLASK_ENV', 'production')
 
 @app.route('/')
 def hello():
-    return 'Hello, DevOps World!'
+    return 'Hello, Jinto World!'
 
 @app.route('/health')
 def health():

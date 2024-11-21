@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,31 +31,46 @@ jobs:
       run: |
         python -m pytest tests/
 
-  build:
+  build-and-push:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: production
     
-    - name: Build Docker image
-      run: docker build -t myapp:${{ github.sha }} .
-    
-    - name: Test Docker image
+    steps:
+    - name: Deploy to production
       run: |
-        docker run -d -p 5000:5000 --name test-container myapp:${{ github.sha }}
-        sleep 5
-        curl http://localhost:5000/health
-        docker stop test-container
-    
-    # Add deployment steps here for your specific cloud provider
-    # Example for Docker Hub:
-    # - name: Login to Docker Hub
-    #   uses: docker/login-action@v1
-    #   with:
-    #     username: ${{ secrets.DOCKER_HUB_USERNAME }}
-    #     password: ${{ secrets.DOCKER_HUB_TOKEN }}
-    
-    # - name: Push to Docker Hub
-    #   run: |
-    #     docker tag myapp:${{ github.sha }} username/myapp:latest
-    #     docker push username/myapp:latest
+        echo "Deploying to production..."
+        # Add deployment steps here when ready
+        # For example, deploy to cloud provider or update k8s cluster
