@@ -1,5 +1,7 @@
 # Advanced DevOps Project
 
+[![CI/CD Pipeline](https://github.com/nived2/simplcicd/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/nived2/simplcicd/actions)
+
 A production-ready DevOps project using Docker, Flask, and GitHub Actions.
 
 ## Features
